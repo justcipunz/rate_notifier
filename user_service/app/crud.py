@@ -34,7 +34,7 @@ async def get_user_marks(db: Session, user_id: int) -> list[models.RateMark]:
     """Получает все отметки конкретного пользователя из БД."""
     query = select(models.RateMark).where(models.RateMark.user_id == user_id)
     result = await db.execute(query)
-    # Используем .scalars().all() для получения списка всех результатов
+    
     return result.scalars().all()
 
 async def delete_user_mark(db: Session, mark_id: int, user_id: int) -> models.RateMark | None:
@@ -44,15 +44,14 @@ async def delete_user_mark(db: Session, mark_id: int, user_id: int) -> models.Ra
     Возвращает удаленный объект, если он был найден и принадлежал пользователю,
     иначе возвращает None.
     """
-    # Сначала найдем отметку, чтобы убедиться, что она существует и принадлежит пользователю
+    
     query = select(models.RateMark).where(
         models.RateMark.id == mark_id,
         models.RateMark.user_id == user_id
     )
     result = await db.execute(query)
     mark_to_delete = result.scalar_one_or_none()
-
-    # Если отметка найдена и принадлежит пользователю
+    
     if mark_to_delete:
         await db.delete(mark_to_delete)
         await db.commit()

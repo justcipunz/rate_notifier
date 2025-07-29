@@ -38,17 +38,12 @@ async def get_current_user(
     return user
 
 
-# Эта функция будет вызвана при старте приложения
 async def create_db_and_tables():
-    async with engine.begin() as conn:
-        # Удаляем таблицы (для удобства при перезапуске в разработке)
-        # await conn.run_sync(Base.metadata.drop_all)
-        # Создаем таблицы на основе моделей из models.py
+    async with engine.begin() as conn:    
         await conn.run_sync(Base.metadata.create_all)
 
 app = FastAPI()
 
-# Добавляем обработчик события "startup"
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
@@ -77,12 +72,9 @@ async def create_new_user(
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db_session),
-):
-    # OAuth2 стандарт требует, чтобы поле называлось 'username',
-    # но мы будем использовать его для email.
+):    
     user = await crud.get_user_by_email(db, email=form_data.username)
-
-    # Проверяем, что пользователь существует и пароль верный
+  
     if not user or not security.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -90,7 +82,6 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Создаем токен
     access_token = security.create_access_token(
         data={"sub": user.email}
     )
@@ -110,7 +101,6 @@ async def create_mark_for_user(
     - **target_rate**: Целевой курс (число с плавающей точкой).
     - **condition**: Условие срабатывания, 'above' (Уведомить меня, когда курс станет выше **target_rate**) или 'below' (Уведомить меня, когда курс станет ниже **target_rate**). По умолчанию 'above'.
     """
-    # В будущем здесь можно добавить логику (например, ограничить кол-во отметок на пользователя)
     return await crud.create_user_mark(db=db, mark=mark, user_id=current_user.id)
 
 
@@ -137,13 +127,10 @@ async def delete_mark(
     deleted_mark = await crud.delete_user_mark(
         db=db, mark_id=mark_id, user_id=current_user.id
     )
-    
-    # Если функция crud вернула None, значит отметка не найдена
-    # или не принадлежит текущему пользователю.
+        
     if deleted_mark is None:
         raise HTTPException(status_code=404, detail="Mark not found")
 
-    # В случае успеха ничего не возвращаем, так как статус 204 No Content
     return
 
 

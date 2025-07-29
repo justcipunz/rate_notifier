@@ -1,61 +1,41 @@
-# Указываем версию синтаксиса Docker Compose
 version: '3.8'
 
-# Здесь мы описываем все наши контейнеры
 services:
-
-  # 1. Сервис пользователей и отметок
   user_service:
-    # Указываем, что образ нужно собрать из Dockerfile
     build: ./user_service 
-    # Пробрасываем порт 8001 с нашей машины на порт 8000 внутри контейнера,
-    # чтобы мы могли обращаться к API сервиса из браузера
     ports:
       - "8001:8000"
     volumes:
-      # Пробрасываем папку с кодом с локальной машины внутрь контейнера
       - ./user_service/app:/code/app
-    # Переменные окружения, которые будут доступны внутри контейнера
     environment:
-      # Строка подключения к базе данных. 'postgres_db' - это имя сервиса БД ниже
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
       - SECRET_KEY=${USER_SERVICE_SECRET_KEY}
-
-    # Указываем, что этот сервис должен запускаться только после postgres_db
     depends_on:
       - postgres_db
 
-  # 2. Сервис отслеживания курса
   rate_tracker_service:
-    # Docker будет искать Dockerfile в папке ./rate_tracker_service
     build: ./rate_tracker_service
     volumes:
-      # Пробрасываем папку с кодом с локальной машины внутрь контейнера
-      - ./user_service/app:/code/app
+      - ./rate_tracker_service/app:/code/app
     environment:
-      # Адрес RabbitMQ для отправки сообщений. 'rabbitmq' - имя сервиса брокера
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
       - EXTERNAL_API_URL=https://www.cbr-xml-daily.ru/daily_json.js
-    # Запускается после RabbitMQ
+      - FETCH_INTERVAL_SECONDS=60 
     depends_on:
       - rabbitmq
 
-  # 3. Гибридный сервис уведомлений
   notification_service:
     build: ./notification_service
     volumes:
-      # Пробрасываем папку с кодом с локальной машины внутрь контейнера
-      - ./user_service/app:/code/app
+      - ./notification_service/app:/code/app
     environment:
-      - DATABASE_URL=postgresql+asyncpg://user:password@postgres_db:5432/app_db
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
     depends_on:
       - postgres_db
       - rabbitmq
 
-  # 4. База данных
   postgres_db:
-    # Используем готовый официальный образ PostgreSQL
     image: postgres:14-alpine
     ports:
       - "5433:5432"
@@ -63,20 +43,17 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-    # Сохраняем данные БД на хост-машине, чтобы они не терялись при перезапуске контейнера
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
-  # 5. Брокер сообщений
   rabbitmq:
-    # Используем готовый образ RabbitMQ с веб-интерфейсом для управления
     image: rabbitmq:3.9-management-alpine
     ports:
-      # Веб-интерфейс будет доступен по адресу http://localhost:15672
       - "15672:15672"
-      # Стандартный порт для подключения сервисов
       - "5672:5672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
 
-# Определяем volume, который мы использовали для postgres_db
 volumes:
   postgres_data:

@@ -1,9 +1,6 @@
-fastapi
-uvicorn
+pika
 
 sqlalchemy
 asyncpg
-alembic
 
-python-jose[cryptography]
-passlib[bcrypt]
+psycopg2-binary

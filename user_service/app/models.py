@@ -18,7 +18,7 @@ class RateMark(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     target_rate = Column(Float, nullable=False)
-    # Условие может быть 'above' или 'below' (курс должен стать выше или ниже отметки)
+    
     condition = Column(String, default="above") 
     is_active = Column(Boolean, default=True)
     user_id = Column(Integer, ForeignKey("users.id"))

@@ -1,11 +1,9 @@
 from pydantic import BaseModel, EmailStr
 
-# Схема для создания пользователя (что мы ждем в запросе)
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-# Схема для ответа (что мы возвращаем, без пароля!)
 class User(BaseModel):
     id: int
     email: EmailStr
@@ -22,7 +20,7 @@ class TokenData(BaseModel):
 
 class RateMarkBase(BaseModel):
     target_rate: float
-    condition: str = "above"  # Условие: "above" или "below"
+    condition: str = "above"  
 
 class RateMarkCreate(RateMarkBase):
     pass
