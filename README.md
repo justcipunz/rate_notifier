@@ -21,6 +21,7 @@
 *   `RabbitMQ`: Брокер сообщений для асинхронного взаимодействия между сервисами.
 
 ### Схема взаимодействия
+```
 [Внешний API] <---(HTTP GET)--- [Rate Tracker Service] --->(сообщение)---> [RabbitMQ]
 |
 V
@@ -28,6 +29,7 @@ V
 ^
 |
 [Пользователь] <---(HTTP API)---> [User Service] <---------------------------------------(чтение/запись)--------------------------------------/
+```
 
 
 ## Технологический стек
@@ -77,22 +79,25 @@ V
 4.  Теперь вы можете использовать защищенные эндпоинты для создания (`POST /marks/`), просмотра (`GET /marks/`) и удаления (`DELETE /marks/{mark_id}`) своих отметок.
 
 ## Структура проекта
-```.
+```
+.
 ├── user_service/ # Код сервиса пользователей (FastAPI)
 ├── rate_tracker_service/ # Код сервиса отслеживания курса (фоновый скрипт)
 ├── notification_service/ # Код сервиса уведомлений (фоновый скрипт)
 ├── docker-compose.yml # Файл оркестрации контейнеров
 ├── .env # Файл с переменными окружения
 ├── .gitignore # Файл для исключения файлов из Git
-└── README.md # Этот файл```
+└── README.md # Этот файл
+```
 
-# .env.example
-
-```POSTGRES_USER=user
+## .env.example
+```
+POSTGRES_USER=user
 POSTGRES_PASSWORD=password
 POSTGRES_DB=app_db
 
 USER_SERVICE_SECRET_KEY=a-very-secret-and-super-long-random-key-that-you-should-generate
 
 RABBITMQ_DEFAULT_USER=guest
-RABBITMQ_DEFAULT_PASS=guest```
+RABBITMQ_DEFAULT_PASS=guest
+```
